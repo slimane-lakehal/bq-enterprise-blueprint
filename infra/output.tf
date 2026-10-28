@@ -16,3 +16,13 @@ output "dbt_sa_email" {
   description = "dbt service account email"
   value       = google_service_account.dbt.email
 }
+
+output "deploy_sa_email" {
+  description = "Deploy service account email -- set as DEPLOY_SA_EMAIL GitHub variable"
+  value       = google_service_account.deploy.email
+}
+
+output "runner_image_repo" {
+  description = "Artifact Registry path for the dbt runner image"
+  value       = "${var.region}-docker.pkg.dev/${var.project}/${google_artifact_registry_repository.lumio.repository_id}/dbt-runner"
+}
