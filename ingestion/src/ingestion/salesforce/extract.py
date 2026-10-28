@@ -15,7 +15,8 @@ import pandas as pd
 import structlog
 from faker import Faker
 
-from ingestion.shared.gcs_client import upload_to_gcs
+from ingestion.shared.publish import publish_frame
+from ingestion.shared.schema_registry import SalesforceCustomer
 
 logger = structlog.get_logger()
 
@@ -92,13 +93,15 @@ def extract(
     customers = _generate_customers(n_customers, run_date, seed)
     df = pd.DataFrame(customers)
 
-    date_str = run_date.isoformat()
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    local_path = tmp_dir / f"customers_{date_str}.parquet"
-    df.to_parquet(local_path, index=False, engine="pyarrow")
-
-    logger.info("salesforce_parquet_written", path=str(local_path), rows=len(df))
-    upload_to_gcs(bucket, local_path, f"salesforce/raw/{date_str}/customers.parquet")
+    publish_frame(
+        df,
+        SalesforceCustomer,
+        source="salesforce",
+        entity="customers",
+        bucket=bucket,
+        run_date=run_date,
+        tmp_dir=tmp_dir,
+    )
     logger.info("salesforce_extract_done", rows=len(df))
 
 

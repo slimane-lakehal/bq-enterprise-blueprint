@@ -16,7 +16,8 @@ import pandas as pd
 import structlog
 
 from ingestion.shared.determinism import stable_int
-from ingestion.shared.gcs_client import upload_to_gcs
+from ingestion.shared.publish import publish_frame
+from ingestion.shared.schema_registry import SapInventoryRecord
 
 logger = structlog.get_logger()
 
@@ -74,13 +75,15 @@ def extract(bucket: str, run_date: date, tmp_dir: Path) -> None:
 
     df = pd.DataFrame(records)
 
-    date_str = run_date.isoformat()
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    local_path = tmp_dir / f"inventory_{date_str}.parquet"
-    df.to_parquet(local_path, index=False, engine="pyarrow")
-
-    logger.info("sap_parquet_written", path=str(local_path), rows=len(df))
-    upload_to_gcs(bucket, local_path, f"sap/raw/{date_str}/inventory.parquet")
+    publish_frame(
+        df,
+        SapInventoryRecord,
+        source="sap",
+        entity="inventory",
+        bucket=bucket,
+        run_date=run_date,
+        tmp_dir=tmp_dir,
+    )
     logger.info("sap_extract_done", rows=len(df))
 
 

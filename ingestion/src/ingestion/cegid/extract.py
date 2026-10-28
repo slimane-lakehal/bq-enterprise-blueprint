@@ -21,7 +21,8 @@ import pandas as pd
 import structlog
 
 from ingestion.shared.determinism import stable_int
-from ingestion.shared.gcs_client import upload_to_gcs
+from ingestion.shared.publish import publish_frame
+from ingestion.shared.schema_registry import CegidTransaction
 
 logger = structlog.get_logger()
 
@@ -81,13 +82,15 @@ def extract(data_dir: Path, bucket: str, run_date: date, tmp_dir: Path) -> None:
         "product_id", "category_id", "quantity", "unit_price", "total_price", "payment_type",
     ]].copy()
 
-    date_str = run_date.isoformat()
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    local_path = tmp_dir / f"transactions_{date_str}.parquet"
-    result.to_parquet(local_path, index=False, engine="pyarrow")
-
-    logger.info("cegid_parquet_written", path=str(local_path), rows=len(result))
-    upload_to_gcs(bucket, local_path, f"cegid/raw/{date_str}/transactions.parquet")
+    publish_frame(
+        result,
+        CegidTransaction,
+        source="cegid",
+        entity="transactions",
+        bucket=bucket,
+        run_date=run_date,
+        tmp_dir=tmp_dir,
+    )
     logger.info("cegid_extract_done", rows=len(result))
 
 
