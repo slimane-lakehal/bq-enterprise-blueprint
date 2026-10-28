@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: stg_sap__inventory
+    description: "Cleaned SAP inventory snapshots. One row per store x product x snapshot day."
+    columns:
+      - name: inventory_id
+        description: "PK -- uuid5 of store, product and snapshot date."
+        tests: [not_null, unique]
+      - name: store_id
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+      - name: brand_id
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['lumio_maison', 'lumio_sport', 'lumio_kids']
+      - name: quantity_on_hand
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+      - name: quantity_reserved
+        description: "Never above quantity_on_hand at the source."
+        tests: [not_null]
+      - name: snapshot_date
+        tests: [not_null]
+      - name: loaded_dt
+        description: "Partition (`dt`) the row was read from."

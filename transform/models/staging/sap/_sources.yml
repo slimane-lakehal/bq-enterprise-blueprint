@@ -1,0 +1,20 @@
+version: 2
+
+sources:
+  - name: sap
+    description: >
+      SAP ERP daily inventory snapshots (simulated), landed as Parquet in GCS by
+      `ingest-sap` and exposed as a BigLake table (infra/biglake.tf).
+    schema: raw_sap
+    tables:
+      - name: inventory
+        description: One row per store x product x snapshot day, partitioned by `dt`.
+        config:
+          loaded_at_field: "timestamp(dt)"
+          freshness:
+            warn_after: { count: 36, period: hour }
+            error_after: { count: 72, period: hour }
+            # the table requires a partition filter, so freshness needs one too
+            filter: "dt >= date_sub(current_date(), interval 7 day)"
+      - name: rejected
+        description: Rows that broke the contract at ingestion, kept for triage.

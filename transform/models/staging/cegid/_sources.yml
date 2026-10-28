@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: cegid
+    description: >
+      Cegid POS transactions (simulated by the Olist dataset), landed as Parquet
+      in GCS by `ingest-cegid` and exposed as a BigLake table (infra/biglake.tf).
+      A one-time historical load, so no freshness check.
+    schema: raw_cegid
+    tables:
+      - name: transactions
+        description: One row per transaction line, partitioned by load date `dt`.
+      - name: rejected
+        description: >
+          Rows that broke the Pydantic contract at ingestion. Kept for triage,
+          never silently dropped (ingestion/shared/validation.py).

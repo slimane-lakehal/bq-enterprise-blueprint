@@ -15,10 +15,21 @@ vars:
   # WHICH environment's datasets to write to. See macros/generate_schema_name.sql.
   env: dev
 
+  # Lower bound of the `dt` partition filter every staging model applies to its
+  # BigLake source (the tables require a partition filter, infra/biglake.tf).
+  # Explicit and greppable instead of a hidden "all time". Raise it to cut cost.
+  raw_start_date: "2000-01-01"
+
 models:
   lumio:
     staging:
       +materialized: view
+      cegid:
+        +schema: stg_cegid
+      sap:
+        +schema: stg_sap
+      salesforce:
+        +schema: stg_salesforce
     intermediate:
       +materialized: table
       +schema: intermediate

@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: stg_cegid__transactions
+    description: "Cleaned Cegid POS transactions. One row per transaction line."
+    columns:
+      - name: transaction_id
+        description: "PK -- Olist order_id + line number."
+        tests: [not_null, unique]
+      - name: store_id
+        description: "Store (Olist seller) that made the sale."
+        tests: [not_null]
+      - name: brand_id
+        description: "Lumio brand, assigned deterministically from the store."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['lumio_maison', 'lumio_sport', 'lumio_kids']
+      - name: transaction_at
+        description: "Purchase timestamp (UTC)."
+        tests: [not_null]
+      - name: transaction_date
+        description: "date(transaction_at)."
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+      - name: quantity
+        description: "Always 1 in the Olist mapping."
+        tests: [not_null]
+      - name: unit_price
+        tests: [not_null]
+      - name: payment_type
+        description: "Primary payment method; 'unknown' when absent."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined', 'unknown']
+              config:
+                severity: warn
+      - name: loaded_dt
+        description: "Partition (`dt`) the row was read from."
