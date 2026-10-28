@@ -1,0 +1,32 @@
+# Which part of the graph each scheduled run builds (runner/entrypoint.sh,
+# infra/runner.tf).
+#
+#   marts    every mart outside data_quality, and all their parents
+#   quality  the data_quality marts and the models only they read
+#
+# A model feeding both belongs to `marts`, so a quality run never rebuilds it.
+selectors:
+  - name: marts_only
+    definition:
+      intersection:
+        - method: path
+          value: models/marts
+        - exclude:
+            - method: path
+              value: models/marts/data_quality
+
+  - name: marts
+    definition:
+      method: selector
+      value: marts_only
+      parents: true
+
+  - name: quality
+    definition:
+      union:
+        - method: path
+          value: models/marts/data_quality
+          parents: true
+        - exclude:
+            - method: selector
+              value: marts

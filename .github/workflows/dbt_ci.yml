@@ -1,0 +1,52 @@
+name: dbt CI
+
+# Checks that need no warehouse access: the project parses, and every model is
+# covered by a runner selector (transform/selectors.yml). A build-based slim CI
+# (`state:modified+ --defer`) comes once prod artifacts exist to defer to.
+on:
+  pull_request:
+    paths:
+      - 'transform/**'
+      - 'pyproject.toml'
+      - '.github/workflows/dbt_ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  dbt-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: transform
+    env:
+      # parse never connects, but profiles.yml reads these at render time
+      GCP_PROJECT: parse-only
+      GCP_SA_DBT: parse-only@parse-only.iam.gserviceaccount.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dbt
+        run: uv sync --project ..
+
+      - name: Parse
+        run: |
+          uv run --project .. dbt deps --profiles-dir profiles
+          uv run --project .. dbt parse --profiles-dir profiles --target ci
+          uv run --project .. dbt parse --profiles-dir profiles --target ci --vars '{env: prod}'
+
+      # A model in neither selector is only built by the weekly full refresh.
+      # Worth knowing in the PR, not a failure.
+      - name: Selector coverage
+        run: |
+          ls_models() { uv run --project .. dbt ls --profiles-dir profiles --target ci --resource-type model --output name "$@" 2>/dev/null | grep -E '^[a-z0-9_]+$' | sort -u; }
+          ls_models > all.txt
+          ls_models --selector marts > marts.txt
+          ls_models --selector quality > quality.txt
+          sort -u marts.txt quality.txt > covered.txt
+          comm -23 all.txt covered.txt > uncovered.txt
+          if [ -s uncovered.txt ]; then
+            echo "::warning::Models in neither selector (built only by the full refresh): $(tr '\n' ' ' < uncovered.txt)"
+          fi

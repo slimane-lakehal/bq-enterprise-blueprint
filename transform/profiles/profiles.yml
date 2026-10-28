@@ -1,0 +1,33 @@
+# One profile, three targets. The target is about AUTHENTICATION only.
+#   dev   local: your ADC, impersonating the dbt SA (same as gcs_client.py)
+#   ci    GitHub Actions: ambient credentials from google-github-actions/auth
+#   prod  Cloud Run Job: ambient identity of the Job's service account
+# Which datasets get written is decided by the `env` var, not by the target.
+lumio:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT') }}"
+      dataset: stg_cegid # fallback only; every layer sets +schema or its own
+      location: europe-west1
+      threads: 4
+      timeout_seconds: 600
+      impersonate_service_account: "{{ env_var('GCP_SA_DBT') }}"
+    ci:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT') }}"
+      dataset: stg_cegid
+      location: europe-west1
+      threads: 4
+      timeout_seconds: 600
+    prod:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('BQ_PROJECT') }}"
+      dataset: stg_cegid
+      location: europe-west1
+      threads: 4
+      timeout_seconds: 600

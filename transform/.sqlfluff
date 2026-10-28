@@ -1,0 +1,29 @@
+[sqlfluff]
+templater = dbt
+dialect = bigquery
+max_line_length = 100
+
+# Rules we opt out of, with the reason:
+#   ST06  column order -- columns are grouped by meaning, not by kind.
+#   RF02  every join column qualified -- noisy in single-table CTEs.
+#   AL01  explicit AS on table aliases -- implicit aliases read fine in UNNEST/short CTEs.
+#   AM05  explicit INNER/LEFT on every JOIN -- bare JOIN reads fine.
+exclude_rules = ST06, RF02, AL01, AM05
+
+[sqlfluff:indentation]
+indented_ctes = true
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = lower

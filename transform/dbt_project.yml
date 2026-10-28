@@ -1,0 +1,27 @@
+name: 'lumio'
+version: '1.0.0'
+config-version: 2
+
+profile: 'lumio'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+vars:
+  # Dataset prefix per environment, deliberately a var and not the dbt target
+  # name: the target says HOW we authenticate (local / CI / Cloud Run), not
+  # WHICH environment's datasets to write to. See macros/generate_schema_name.sql.
+  env: dev
+
+models:
+  lumio:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
