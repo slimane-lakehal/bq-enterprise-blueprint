@@ -124,3 +124,26 @@ resource "google_service_account_iam_member" "wif_ingestion" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/slimane-lakehal/bq-entreprise-blueprint"
 }
+
+# ── dbt SA: downstream layers ────────────────────────────────────────────────
+
+resource "google_bigquery_dataset_iam_member" "dbt_write_intermediate" {
+  dataset_id = google_bigquery_dataset.intermediate.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.dbt.email}"
+}
+
+resource "google_bigquery_dataset_iam_member" "dbt_write_marts" {
+  dataset_id = google_bigquery_dataset.marts.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.dbt.email}"
+}
+
+# ── Scheduler SA ─────────────────────────────────────────────────────────────
+# Dedicated identity for Cloud Scheduler -> Cloud Run Job. It may start a job
+# (run.invoker, granted per job in runner.tf) and nothing else: no BigQuery.
+
+resource "google_service_account" "scheduler" {
+  account_id   = "lumio-scheduler"
+  display_name = "Lumio Scheduler -- only triggers the dbt runner Jobs"
+}
