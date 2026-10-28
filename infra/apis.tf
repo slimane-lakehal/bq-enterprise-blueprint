@@ -5,7 +5,8 @@
 locals {
   required_apis = [
     "bigquery.googleapis.com",
-    "bigquerystorage.googleapis.com", # Storage Write API (streaming path, phase 4)
+    "bigquerystorage.googleapis.com",    # Storage Write API (streaming path, phase 4)
+    "bigqueryconnection.googleapis.com", # BigLake connection (biglake.tf)
     "storage.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com", # SA impersonation + Workload Identity Federation
