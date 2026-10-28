@@ -20,6 +20,7 @@ from pathlib import Path
 import pandas as pd
 import structlog
 
+from ingestion.shared.determinism import stable_int
 from ingestion.shared.gcs_client import upload_to_gcs
 
 logger = structlog.get_logger()
@@ -29,7 +30,7 @@ BRANDS = ["lumio_maison", "lumio_sport", "lumio_kids"]
 
 def _brand_for_seller(seller_id: str) -> str:
     """Stable deterministic brand assignment — same seller always maps to same brand."""
-    return BRANDS[hash(seller_id) % 3]
+    return BRANDS[stable_int(seller_id) % len(BRANDS)]
 
 
 def extract(data_dir: Path, bucket: str, run_date: date, tmp_dir: Path) -> None:

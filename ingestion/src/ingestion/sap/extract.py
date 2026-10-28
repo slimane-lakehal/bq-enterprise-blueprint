@@ -15,6 +15,7 @@ from random import Random
 import pandas as pd
 import structlog
 
+from ingestion.shared.determinism import stable_int
 from ingestion.shared.gcs_client import upload_to_gcs
 
 logger = structlog.get_logger()
@@ -47,7 +48,7 @@ def extract(bucket: str, run_date: date, tmp_dir: Path) -> None:
     logger.info("sap_extract_start", run_date=str(run_date))
 
     # Date-seeded RNG — same date = same output (idempotent), different dates = different levels
-    rng = Random(hash(run_date.isoformat()) & 0xFFFFFFFF)
+    rng = Random(stable_int(run_date.isoformat()))
     products = _build_product_catalog(rng)
 
     records = []

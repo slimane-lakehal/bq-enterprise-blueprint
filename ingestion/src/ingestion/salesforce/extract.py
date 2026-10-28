@@ -8,7 +8,7 @@ Faker stands in as the source system.
 
 import argparse
 import uuid
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -41,10 +41,11 @@ FRENCH_REGIONS = [
 ]
 
 
-def _generate_customers(n: int, run_date: date) -> list[dict]:
+def _generate_customers(n: int, run_date: date, seed: int) -> list[dict]:
     customers = []
-    for _ in range(n):
-        created = fake.date_time_between(start_date="-5y", end_date=run_date)
+    window_start = run_date - timedelta(days=5 * 365)
+    for i in range(n):
+        created = fake.date_time_between(start_date=window_start, end_date=run_date)
         has_purchase = fake.boolean(chance_of_getting_true=80)
         last_purchase = (
             fake.date_between(start_date=created.date(), end_date=run_date)
@@ -53,7 +54,8 @@ def _generate_customers(n: int, run_date: date) -> list[dict]:
         )
         customers.append(
             {
-                "customer_id": str(uuid.uuid4()),
+                # uuid5 on (seed, index): same run => same ids (uuid4 changed on every re-run)
+                "customer_id": str(uuid.uuid5(uuid.NAMESPACE_DNS, f"salesforce_{seed}_{i}")),
                 "email": fake.email(),
                 "first_name": fake.first_name(),
                 "last_name": fake.last_name(),
@@ -87,7 +89,7 @@ def extract(
     )
     Faker.seed(seed)
 
-    customers = _generate_customers(n_customers, run_date)
+    customers = _generate_customers(n_customers, run_date, seed)
     df = pd.DataFrame(customers)
 
     date_str = run_date.isoformat()
