@@ -16,3 +16,6 @@ __pycache__/
 transform/target/
 transform/dbt_packages/
 transform/logs/
+
+# local environment (copy .envrc.example)
+.envrc

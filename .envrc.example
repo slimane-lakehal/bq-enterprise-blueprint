@@ -1,0 +1,5 @@
+# Copy to .envrc (git-ignored) and fill in. Loaded by direnv.
+export CLOUDSDK_ACTIVE_CONFIG_NAME=bq-entreprise-blueprint
+export GCP_PROJECT=<your-dev-project-id>
+export GCP_SA_INGESTION=lumio-ingestion@<your-dev-project-id>.iam.gserviceaccount.com
+export GCP_SA_DBT=lumio-dbt@<your-dev-project-id>.iam.gserviceaccount.com

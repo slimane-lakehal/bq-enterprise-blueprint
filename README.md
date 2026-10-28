@@ -68,9 +68,13 @@ bq-enterprise-blueprint/
 │
 ├── infra/                     Terraform — all GCP resources as code
 │   ├── main.tf                Provider + remote state backend (GCS)
-│   ├── bigquery.tf            Datasets (raw + staging layers)
+│   ├── apis.tf                Required GCP APIs
+│   ├── bigquery.tf            Datasets (raw, staging, intermediate, marts)
+│   ├── biglake.tf             BigLake connection + external tables over GCS
 │   ├── gcs.tf                 Raw landing bucket
-│   ├── iam.tf                 Service accounts, IAM bindings, WIF
+│   ├── iam.tf / ci.tf         Service accounts, IAM bindings, WIF, deploy SA
+│   ├── runner.tf              dbt Cloud Run Jobs + Cloud Scheduler triggers
+│   ├── artifact_registry.tf   Runner image repository
 │   ├── variables.tf
 │   └── output.tf
 │
@@ -81,9 +85,9 @@ bq-enterprise-blueprint/
 │       ├── salesforce/        Faker → Salesforce CRM customers
 │       └── shared/            GCS client, Pydantic data contracts
 │
-├── transform/                 dbt Core project (Phase 2)
+├── transform/                 dbt Core project (Phase 2, in progress)
 │   └── models/
-│       ├── staging/           stg_cegid__, stg_sap__, stg_salesforce__
+│       ├── staging/           stg_cegid__, stg_sap__ (stg_salesforce__ next)
 │       ├── intermediate/      int_unified_customer, int_stock_positions
 │       └── marts/             finance, supply, crm, marketing
 │
@@ -91,8 +95,9 @@ bq-enterprise-blueprint/
 │
 ├── .github/workflows/
 │   ├── ingestion.yml          Daily batch ingestion (03:00 UTC)
-│   ├── dbt_ci.yml             dbt compile + slim CI test on PR
-│   └── terraform.yml          Infra drift detection
+│   ├── ingestion_ci.yml       Ingestion unit tests on PR
+│   ├── dbt_ci.yml             dbt parse + selector coverage on PR
+│   └── deploy.yml             Build runner image, roll dbt Jobs, run a build
 │
 └── docs/                      Architecture deep-dives, runbooks
 ```
