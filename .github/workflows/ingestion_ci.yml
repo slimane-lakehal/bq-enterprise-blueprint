@@ -1,0 +1,27 @@
+name: Ingestion CI
+
+# Unit tests for the ingestion package: contract validation, the circuit
+# breaker, idempotent re-runs, deterministic synthetic data. No GCP access
+# needed -- uploads are mocked.
+on:
+  pull_request:
+    paths:
+      - 'ingestion/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/ingestion_ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - run: uv sync --frozen --package ingestion --group dev
+
+      - run: uv run --frozen --package ingestion pytest ingestion/tests -v
